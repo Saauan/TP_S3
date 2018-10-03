@@ -421,12 +421,11 @@ def float_sign(value):
     >>> float_sign(float_coding.floatbin(-3.5))
     -1
     '''
-    v = integer_to_string(value,2)
-    if (len(v) >> 6) == 0 :
-        return 1
-    else:
+    if value >> 63 == 1: # Si le bit de poids fort de value est de 1
         return -1
-    
+    else:
+        return 1
+
 def float_exponent(value):
     '''
     Returns the exponent e of a float f =
@@ -451,6 +450,13 @@ def float_exponent(value):
     >>> float_exponent(float_coding.floatbin(1.2))
     0
     '''
+    # E = e + 2**(w-1) - 1; then, e = E - 2**(w-1) - 1
+    # With E an integer (encoded exponent), 
+    # e the exponent of the float, 
+    # and w the number of bits allocated to E
+    return isolate_consecutive_bits(value, 52+11-1, 11) - 2**(11-1) + 1
+
+
 def float_mantissa(value):
     '''
     Returns the mantissa m of a float f =
@@ -477,11 +483,17 @@ def float_mantissa(value):
     >>> float_mantissa(float_coding.floatbin(24))
     1.5
     '''
+    # m = 1 + 2**(-t) * M, and M = (m-1)/2**(-t)
+    # With t the number of bits allocated to M,
+    # M the integer on which m is encoded
+    return isolate_consecutive_bits(value, 52-1, 52) * 2**(-52) + 1
+
+
 def float_notation(float_value):
     '''
     Return the sign, exponent and mantissa of a float
 
-    :param float_value: the float value which has to be decomposed
+    :param float_value: the float value which has to be decomposed, in decimal
     :type float_value: float
     :return: The sign s, exponent e and mantissa m such that float_value = s * 2^e * m
     :rtype: tuple
@@ -497,7 +509,7 @@ def float_notation(float_value):
     >>> float_notation(24)
     (1, 4, 1.5)
     '''
-    v = float_coding.floatbin(float_value)
+    v = float_coding.floatbin(float_value) # IEEE-754 binary representation of the float
     return (float_sign(v), float_exponent(v), float_mantissa(v))
     
 def change_a_bit(value, position):
@@ -523,6 +535,10 @@ def change_a_bit(value, position):
     >>> change_a_bit(4, 3)
     12
     '''
+    # 1 << position creates a binary number with one 1 and `position` 0 behind
+    # "^" is a xor
+    return value ^ (1 << position)
+
 def change_a_bit_in_float(value, bit_position):
     '''
     Changes a bit in the IEEE-754 64-bit float representation.
@@ -545,6 +561,9 @@ def change_a_bit_in_float(value, bit_position):
     >>> change_a_bit_in_float(3.5, 51)
     2.5
     '''
+    v_bin = float_coding.floatbin(value) # IEEE-754 binary representation of the float
+    v_bin = change_a_bit(v_bin, bit_position)
+    return float_coding.binfloat(v_bin) # Decimal representation of the float
 
 if __name__ == "__main__":
     import doctest
