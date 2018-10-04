@@ -110,3 +110,12 @@ for i in (.1, .2, .3):
 
 # On a .1 + .2 != .3 parceque leur valeurs binaires sont tronquées. 
 # On a donc une perte d'informations lors de la comparaison
+
+
+#Q31
+print("\n{:d}".format(int(666666666666666666666666/3))) ; print("{:d}".format(666666666666666666666666//3))
+#La valeur sur laquelle est appliquée le int dans le 1er cas est un float (dû à la division avec un /) de ce fait le résultat n'est pas aussi précis que les entiers
+#Ainsi, c'est le 2nd print qui est correct
+
+
+#Q32
