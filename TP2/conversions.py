@@ -6,7 +6,7 @@ import timeit
 
 def integer_to_digit(integer):
     '''
-    Convert an integer in a hexadecimal digit
+    Convert an integer into a hexadecimal digit
 
     :param integer:
     :type integer: int
@@ -26,9 +26,9 @@ def integer_to_digit(integer):
     '''
     assert integer in set(i for i in range(16)) and type(integer) == int, "Integer is Negative or Too Large"
     if 0 <= integer <= 9:
-        return chr(ord('0') + integer)
+        return str(integer)
     else:
-        return chr(ord('7') + integer)
+        return chr(ord('A') + integer - 10)
     
     
 def integer_to_string(integer, base):
@@ -62,12 +62,11 @@ def integer_to_string(integer, base):
     '''
     assert integer >= 0 and int(integer)==integer and type(integer) == int, "Integer is Negative or Not an Integer"
     assert base in set(i for i in range(2, 17)), "Not a valid base"
-    convertString = "0123456789ABCDEF"
     res = ""
     while integer >= base:
-        res = convertString[integer % base] + res
+        res = integer_to_digit(integer % base) + res
         integer = integer // base
-    res = convertString[integer] + res
+    res = integer_to_digit(integer) + res
     return res
     
 def display_20_integers():
@@ -76,22 +75,22 @@ def display_20_integers():
     8 and 16.
     
     >>> display_20_integers()
-    0  : 0     0  0 
-    1  : 1     1  1 
-    2  : 10    2  2 
-    3  : 11    3  3 
-    4  : 100   4  4 
-    5  : 101   5  5 
-    6  : 110   6  6 
-    7  : 111   7  7 
-    8  : 1000  10 8 
-    9  : 1001  11 9 
-    10 : 1010  12 A 
-    11 : 1011  13 B 
-    12 : 1100  14 C 
-    13 : 1101  15 D 
-    14 : 1110  16 E 
-    15 : 1111  17 F 
+    0  :     0 0  0 
+    1  :     1 1  1 
+    2  :    10 2  2 
+    3  :    11 3  3 
+    4  :   100 4  4 
+    5  :   101 5  5 
+    6  :   110 6  6 
+    7  :   111 7  7 
+    8  :  1000 10 8 
+    9  :  1001 11 9 
+    10 :  1010 12 A 
+    11 :  1011 13 B 
+    12 :  1100 14 C 
+    13 :  1101 15 D 
+    14 :  1110 16 E 
+    15 :  1111 17 F 
     16 : 10000 20 10
     17 : 10001 21 11
     18 : 10010 22 12
@@ -99,7 +98,7 @@ def display_20_integers():
     20 : 10100 24 14
     '''
     for nbr in range(21):
-        print("{:2s} : {:5s} {:2s} {:2s}".format(str(nbr),
+        print("{:2s} : {:>5s} {:2s} {:2s}".format(str(nbr),
         integer_to_string(nbr, 2),
         integer_to_string(nbr, 8),
         integer_to_string(nbr, 16)))
@@ -121,10 +120,8 @@ def power_two(n):
     1024
     '''
     assert type(n) == int, "Your number entered is not an integer"
-    if n == 0:
-        return 1
-    else:
-        return 2 << n-1
+    return 1 << n
+
     
 def is_even(n):
     '''
@@ -170,7 +167,7 @@ def integer_to_binary_str(integer):
     '110101'
     '''
     assert type(integer) == int and integer >= 0, "Your number entered isn't an int"
-    return bin(integer)[2:]
+    return integer_to_string(integer, 2)
     
 def binary_str_to_integer(bin_str):
     '''
@@ -191,7 +188,10 @@ def binary_str_to_integer(bin_str):
     128
     '''
     assert type(bin_str) == str, "Your bin number isn't a string"
-    return int(bin_str,2)
+    res = 0
+    for i, b in enumerate(bin_str[::-1]):
+        res = res | (int(b) << i)
+    return res
     
 def most_least_significant_bits_str(byte):
     '''
@@ -255,8 +255,7 @@ def most_least_significant_bits(byte):
     3
     '''
     assert byte <= 255 and byte >= 0 and type(byte) == int, "The parameter is not a correct byte"
-    return (byte & 1) + (byte >> 7 ) * 2
-
+    return byte >> 6 & 0x2 | byte & 0x1
     
 def isolate_bit(value, pos):
     '''
@@ -331,12 +330,12 @@ def isolate_bits(value, positions):
     >>> isolate_bits(0b110110110, [8, 6, 2])
     5
     '''
-    res = ""
-    for i in positions:
-        res += str((value >> i) & 1) 
-    res = binary_str_to_integer(res)
-    return res
 
+    res = 0
+    for i, b in enumerate(positions[::-1]):
+        res = res | (isolate_bit(value, b) << i)
+    return res
+    
 def mask1(length):
     '''
     Return an integer whose binary representation is only made of `length`\
@@ -454,7 +453,7 @@ def float_exponent(value):
     # With E an integer (encoded exponent), 
     # e the exponent of the float, 
     # and w the number of bits allocated to E
-    return isolate_consecutive_bits(value, 52+11-1, 11) - 2**(11-1) + 1
+    return isolate_consecutive_bits(value, 62, 11) - 2**(10) + 1
 
 
 def float_mantissa(value):
@@ -486,7 +485,7 @@ def float_mantissa(value):
     # m = 1 + 2**(-t) * M, and M = (m-1)/2**(-t)
     # With t the number of bits allocated to M,
     # M the integer on which m is encoded
-    return isolate_consecutive_bits(value, 52-1, 52) * 2**(-52) + 1
+    return isolate_consecutive_bits(value, 51, 52) * 2**(-52) + 1
 
 
 def float_notation(float_value):
@@ -568,10 +567,10 @@ def change_a_bit_in_float(value, bit_position):
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose=False, optionflags=doctest.ELLIPSIS)
-    # time1 = timeit.timeit('most_least_significant_bits(255)',
-    #         setup = "from __main__ import most_least_significant_bits",
-    #         number = 100000) 
-    # time2 = timeit.timeit('most_least_significant_bits_str(255)',
-    #         setup = "from __main__ import most_least_significant_bits_str",
-    #         number = 100000)
-    # print(time1, time2)
+    time1 = timeit.timeit('most_least_significant_bits(255)',
+            setup = "from __main__ import most_least_significant_bits",
+            number = 1000) 
+    time2 = timeit.timeit('most_least_significant_bits_str(255)',
+            setup = "from __main__ import most_least_significant_bits_str",
+            number = 1000)
+    print(time1, time2)
