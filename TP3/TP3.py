@@ -34,6 +34,7 @@ print(bin(195))
 #On prend 2 octets et on place en bits de poids fort pour le 1er '110000', et pour le 2nd '10', ensuite
 #On place les 2 bits de poids fort de l'octet à convertir à la place des 2 octets de poids faible du 1er octet en UTF-8 et
 #On place ses 6 bits restants à la place des 6 bits de poids faible du 2nd octet en UTF-8.
+# deux-octet-utf8 = (0xCO | (octet >> 6)) << 8 | (0x80 | b & 0x3F)
 
 
 #Q10
@@ -59,7 +60,7 @@ def isolatinchar_to_utf8(byte):
     if byte >> 7 == 0:
         return [byte]
     else:
-        return [0xC0 | (byte >> 6), 0x80 | (byte & 63)]
+        return [0xC0 | (byte >> 6), 0x80 | (byte & 0x3F)]
     
     
 #Q11
@@ -68,16 +69,18 @@ def isolatin_to_utf8(input,output):
     Converts an ISO-8859-1 file to an UTF-8 one.
     
     :param: input - a file written in ISO-8859-1
-            output - a file which will containe the input content converted in UTF-8
+            output - a file which will contain the input content converted in UTF-8
     :return: none
     :CU: input is opened in read and binary modes, output is opened in write and binary modes
     """
-    with open(input, 'rb') as textToConvert: 
-        with open(output, 'wb') as textConverted:
-            for n in textToConvert:
-                caracConverted = isolatinchar_to_utf8(textToConvert.read(n)[0])
-                
-                
+    while True:
+        try:
+            c = input.read(1)[0]
+            c = isolatinchar_to_utf8(c)
+            output.write(bytes(c))
+        except IndexError:
+            #print("EOF") # DEBUG
+            break
 
 #Q12
 def convert_file_isolatin_utf8(source, dest):
@@ -90,8 +93,6 @@ def convert_file_isolatin_utf8(source, dest):
     isolatin_to_utf8(input_stream,output_stream)
     input_stream.close()
     output_stream.close()
-
-
 
 #Q13
 def utf8char_to_isolatin(two_bytes):
@@ -115,7 +116,52 @@ def utf8char_to_isolatin(two_bytes):
     >>> utf8char_to_isolatin([195, 191])
     [255]
     """
-##    if len(two_bytes) == 1:
-##        return [two_bytes]
-##    else:
-##        return [((two_bytes[0] & 3) << 6) | two_bytes[1] ]
+    assert(type(two_bytes) == list), "two_bytes is not a list !"
+    if len(two_bytes) == 1:
+       return two_bytes
+    else:
+       return [ ((two_bytes[0] & 3) << 6) | (two_bytes[1] & 63) ]
+
+#Q14
+def utf8_to_isolatin(instream, outstream):
+    """
+    Converts an UTF-8 file to an ISO-8859-1 one.
+    
+    :param: instream - a file written in UTF-8
+            outstream - a file which will contain the input content converted in ISO-8859-1
+    :return: none
+    :CU: input is opened in read and binary modes, output is opened in write and binary modes
+    """
+    while True:
+        try:
+            c = [instream.read(1)[0]]
+            if c[0] >> 2  == 0x30:
+                c.append(instream.read(1)[0])
+            c = utf8char_to_isolatin(c)
+            assert type(c) == list and len(c) == 1, "c is not correctly converted to ISO"
+            outstream.write(bytes(c))
+        except IndexError:
+            # print("EOF") # DEBUG
+            return
+
+#Q15
+def convert_file_utf8_isolatin(source, dest): 
+    '''
+    Converts `source` file from UTF-8 encoding to ISO-8859-1.
+    The output is written in the `dest` file.
+    ''' 
+    input_stream = open(source, 'rb') 
+    output_stream = open(dest, 'wb') 
+    utf8_to_isolatin(input_stream, output_stream) 
+    input_stream.close() 
+    output_stream.close()
+
+
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(verbose=False, optionflags=doctest.ELLIPSIS)
+    # Tests:
+    # convert_file_isolatin_utf8("cigale-ISO-8859-1.txt", "cigale-UTF-Test.txt")
+    # convert_file_utf8_isolatin("cigale-UTF-Test.txt", "cigale-ISO-Test.txt")
