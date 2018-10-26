@@ -362,12 +362,13 @@ def write_bits(stream, bits):
     0
     >>> list(r.read()) # Read the three bytes that should have been written to the file
     [223, 223, 1]
-    >>> write_bits(tempfile.NamedTemporaryFile(mode='w'), '11011111000000010110')
-    Traceback (most recent call last):
-    ...
-    AssertionError: The stream must be opened in write and binary modes ('wb')
     """
-
+    if len(bits) < 8:
+        return bits
+    else:
+        stream.write(bits[0:8])
+        return write_bits(stream, bits[8:])
+    
 
 
 #f = open('file.txt', 'wb')
@@ -432,7 +433,12 @@ def read_bits(stream):
     >>> read_bits(r) # The end of the file is reached
     ''
     """
-
+    text = stream.read()
+    try:
+        return text[0:8]
+        text = text[8:]
+    except:
+        return ''
 
 
 
@@ -535,6 +541,46 @@ def write_binary_string_in_file(binary, file):
     binary = flush_binary_string(binary, out_file)
     write_bits(out_file, complete_byte(binary))
     out_file.close()
+
+
+
+
+def read_file(file):
+    """
+    Read the data in the file and returns a binary string corresponding to that data.
+    
+    :param: file (str) - the filename of the file to read
+    :return: The binary string (str) of the data that was stored in the file.
+             The completion will be removed from the binary string.
+    
+    Examples :
+    >>> import tempfile ; r = tempfile . NamedTemporaryFile ()
+    >>> write_binary_string_in_file('01000001010',r.name )
+    >>> r.seek(0);
+    0
+    >>> read_file (r.name)
+    '01000001010'
+    """
+    in_file = open(file, 'rb')
+    bits = ''
+    binaire = read_bits(in_file)
+    while binaire != "":
+        bits += binaire
+        binaire = read_bits(in_file)
+    in_file.close
+    if len(bits) > 0:
+        bits = remove_completion(bits)
+    return bits
+
+
+
+
+#write_binary_string_in_file("0110001001010100001110101111111010110110111011000000011011111110000000110101101111110101110111100101010000101110", "mot3.data")
+
+
+
+#Q27
+#read_file("mot3.data")
 
 
 if __name__ == "__main__":
