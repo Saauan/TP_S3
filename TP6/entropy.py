@@ -1,13 +1,12 @@
 '''
    Compute the entropy on files.
 
-   @author FIL - IEEA - Univ. Lille 1 (oct 2010, août 2015)
+   @author Tayebi Ajwad, Coignion Tristan
 '''
 
 import sys
-from math import log
+from math import log2
 
-# IMPORTS A COMPLETER
 
 def symbol_occurrences(stream):
     '''
@@ -65,26 +64,37 @@ def entropy(filename):
     '''
     with open(filename, 'rb') as infile :
         counters = symbol_occurrences(infile)
-    # Calcul de l'entropie à partir des effectifs des octets.
-        total_sum = nb_bytes = 0
-         
+        total_sum, nb_bytes = 0, sum(counters.values())
+        for cpt in counters:
+            total_sum += counters[cpt] * log2(counters[cpt])
+    return (nb_bytes, (log2(nb_bytes) - (total_sum/nb_bytes)))
 
-    return (nb_bytes, log(nb_bytes, 2) - (total_sum / nb_bytes))
 
-##def usage():
-##    print("Usage: {:s} <filename>".format(sys.argv[0]))
-##    print("\t<filename>: filename for which we want to compute the entropy.\n")
-##    exit(1)
-##
-##def main():
-##    if len(sys.argv) != 2:
-##        usage()
-##    (nb_bytes, entro) = entropy(sys.argv[1])
-##    print("{:d} bytes read.".format(nb_bytes))
-##    print("Entropy = {:f} bits per byte.".format(entro))
-##    
-##if __name__ == '__main__':
-##    main()
-if __name__ == "__main__":
+
+#Q5
+#Ici, étant donné que c'est un codage binaire, l'encadrement de notre fichier est représenté de la sorte :
+# entropy(X) <= (n Σ i=0) pi*ci < entropy(X) + 1
+
+
+#Q6 & Q7 à faire
+
+
+
+
+def usage():
+    print("Usage: {:s} <filename>".format(sys.argv[0]))
+    print("\t<filename>: filename for which we want to compute the entropy.\n")
+    exit(1)
+
+def main():
+    if len(sys.argv) != 2:
+        usage()
+    (nb_bytes, entro) = entropy(sys.argv[1])
+    print("{:d} bytes read.".format(nb_bytes))
+    print("Entropy = {:f} bits per byte.".format(entro))
+    
+if __name__ == '__main__':
+    main()
+
     import doctest
     doctest.testmod(verbose=False, optionflags=doctest.ELLIPSIS)
